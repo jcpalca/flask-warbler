@@ -1,3 +1,4 @@
+from http.client import UNAUTHORIZED
 import os
 from dotenv import load_dotenv
 
@@ -5,8 +6,10 @@ from flask import Flask, render_template, request, flash, redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
-from forms import UserAddForm, LoginForm, MessageForm
+from forms import CSRFProtectForm, UserAddForm, LoginForm, MessageForm
 from models import db, connect_db, User, Message
+
+from werkzeug.exceptions import Unauthorized
 
 load_dotenv()
 
@@ -41,6 +44,11 @@ def add_user_to_g():
     else:
         g.user = None
 
+@app.before_request
+def add_csrf_form():
+    """Add a CSRF form so that every route can use it"""
+
+    g.csrf_form = CSRFProtectForm()
 
 def do_login(user):
     """Log in user."""
@@ -119,6 +127,12 @@ def logout():
     """Handle logout of user and redirect to homepage."""
 
     form = g.csrf_form
+
+    if form.validate_on_submit():
+        do_logout()
+        return redirect("/")
+    else:
+        raise Unauthorized()
 
     # IMPLEMENT THIS AND FIX BUG
     # DO NOT CHANGE METHOD ON ROUTE
