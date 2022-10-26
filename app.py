@@ -9,7 +9,8 @@ from forms import (
     CSRFProtectForm, UserAddForm, LoginForm, MessageForm, UserEditForm
 )
 from models import (
-    db, connect_db, User, Message, DEFAULT_IMAGE_URL, DEFAULT_HEADER_IMAGE_URL
+    db, connect_db, User, Message, Like,
+    DEFAULT_IMAGE_URL, DEFAULT_HEADER_IMAGE_URL
 )
 
 load_dotenv()
@@ -328,6 +329,9 @@ def show_message(message_id):
         return redirect("/")
 
     msg = Message.query.get_or_404(message_id)
+
+    print("This is msg liked by user: ", msg.liked_by_user)
+
     return render_template('messages/show.html', message=msg)
 
 
@@ -348,6 +352,8 @@ def delete_message(message_id):
     db.session.commit()
 
     return redirect(f"/users/{g.user.id}")
+
+@app.post('/messages/<int:message_id>/like')
 
 
 ##############################################################################
