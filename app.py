@@ -1,4 +1,3 @@
-from http.client import UNAUTHORIZED
 import os
 from dotenv import load_dotenv
 
@@ -43,6 +42,7 @@ def add_user_to_g():
 
     else:
         g.user = None
+        raise Unauthorized()
 
 @app.before_request
 def add_csrf_form():
@@ -130,7 +130,8 @@ def logout():
 
     if form.validate_on_submit():
         do_logout()
-        return redirect("/")
+        flash('You have successfully logged out.')
+        return redirect("/login")
     else:
         raise Unauthorized()
 
@@ -238,8 +239,16 @@ def stop_following(follow_id):
 @app.route('/users/profile', methods=["GET", "POST"])
 def profile():
     """Update profile for current user."""
+    user = {
+        location: g.user.location,
+        bio: g.user.bio,
+        header_image: g.user.header_image_url
+    }
 
-    # IMPLEMENT THIS
+    return render_template('detail.html', user=user)
+
+
+
 
 
 @app.post('/users/delete')
