@@ -5,10 +5,12 @@ from flask import Flask, render_template, request, flash, redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
-from forms import CSRFProtectForm, UserAddForm, LoginForm, MessageForm
-from models import db, connect_db, User, Message
-
-from werkzeug.exceptions import Unauthorized
+from forms import (
+    CSRFProtectForm, UserAddForm, LoginForm, MessageForm, UserEditForm
+)
+from models import (
+    db, connect_db, User, Message, DEFAULT_IMAGE_URL, DEFAULT_HEADER_IMAGE_URL
+)
 
 load_dotenv()
 
@@ -22,7 +24,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_DATABASE_URI'] = (
     os.environ['DATABASE_URL'].replace("postgres://", "postgresql://"))
 app.config['SQLALCHEMY_ECHO'] = False
-app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = True
+app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 toolbar = DebugToolbarExtension(app)
 
@@ -132,10 +134,8 @@ def logout():
         flash('You have successfully logged out.')
         return redirect("/login")
     else:
-        raise Unauthorized()
-
-    # IMPLEMENT THIS AND FIX BUG
-    # DO NOT CHANGE METHOD ON ROUTE
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
 
 
 ##############################################################################
@@ -238,16 +238,37 @@ def stop_following(follow_id):
 @app.route('/users/profile', methods=["GET", "POST"])
 def profile():
     """Update profile for current user."""
-    user = {
-        location: g.user.location,
-        bio: g.user.bio,
-        header_image: g.user.header_image_url
-    }
 
-    return render_template('detail.html', user=user)
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
 
+    user = g.user
+    form = UserEditForm(obj=user)
 
+    if form.validate_on_submit():
+        user = User.authenticate(
+            form.username.data,
+            form.password.data
+        )
 
+        if user:
+            user.username = form.username.data
+            user.email = form.email.data
+            user.image_url = form.image_url.data or DEFAULT_IMAGE_URL
+            user.header_image_url = (
+                form.header_image_url.data or DEFAULT_HEADER_IMAGE_URL
+            )
+            user.location = form.location.data
+            user.bio = form.bio.data
+
+            db.session.commit()
+
+            return redirect(f"/users/{user.id}")
+        else:
+            flash("Incorrect password", "danger")
+
+    return render_template('users/edit.html', form=form, user=user)
 
 
 @app.post('/users/delete')
