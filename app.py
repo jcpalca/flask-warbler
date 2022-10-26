@@ -237,7 +237,10 @@ def stop_following(follow_id):
 
 @app.route('/users/profile', methods=["GET", "POST"])
 def profile():
-    """Update profile for current user."""
+    """Update profile for current user
+        GET: Shows update profile page for current user.
+        POST: Returns updated profile information and adds it to the db
+        For non-validation: re-renders the form with error message"""
 
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -360,11 +363,15 @@ def homepage():
     """
 
     if g.user:
-        messages = (Message
-                    .query
-                    .order_by(Message.timestamp.desc())
-                    .limit(100)
-                    .all())
+        following_ids = [f.id for f in g.user.following] + [g.user.id]
+
+        messages = (
+            Message
+            .query
+            .filter(Message.user_id.in_(following_ids))
+            .order_by(Message.timestamp.desc())
+            .limit(100)
+            .all())
 
         return render_template('home.html', messages=messages)
 
