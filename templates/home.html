@@ -51,9 +51,13 @@
                 <a href="/messages/{{ msg.id }}" class="message-link">
                 <a href="/users/{{ msg.user.id }}">
                   <img src="{{ msg.user.image_url }}" alt="" class="timeline-image">
-                  <form action="/users" method="GET" class="pt-4 ps-2">
+                  <form action="/users" method="POST" class="pt-4 ps-2">
                     <button type="submit" class="btn btn-outline-secondary btn-sm" aria-pressed="false">
+                      {% if msg in g.user.liked_messages %}
+                      <i class="bi bi-star-fill"></i>
+                      {% else %}
                       <i class="bi bi-star"></i>
+                      {% endif %}
                     </button>
                   </form>
                 </a>

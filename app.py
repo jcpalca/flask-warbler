@@ -322,17 +322,16 @@ def add_message():
 
 @app.get('/messages/<int:message_id>')
 def show_message(message_id):
-    """Show a message."""
+    """Show a message detail."""
 
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
+    user = g.user
     msg = Message.query.get_or_404(message_id)
 
-    print("This is msg liked by user: ", msg.liked_by_user)
-
-    return render_template('messages/show.html', message=msg)
+    return render_template('messages/show.html', message=msg, user=user)
 
 
 @app.post('/messages/<int:message_id>/delete')
@@ -360,7 +359,7 @@ def delete_message(message_id):
 # Homepage and error pages
 
 
-@app.get('/')
+@app.route('/', methods=['GET', 'POST'])
 def homepage():
     """Show homepage:
 
@@ -384,6 +383,16 @@ def homepage():
     else:
         return render_template('home-anon.html')
 
+    # user = g.user
+
+    # for msg in messages:
+    # msg = Message.query.get_or_404(message)
+
+    # if form.validate_on_submit():
+    #     user.liked_messages.append(msg)
+    #     db.session.commit()
+
+    #     return redirect('/')
 
 ##############################################################################
 # Turn off all caching in Flask
