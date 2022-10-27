@@ -8,6 +8,7 @@
 import os
 from unittest import TestCase
 from flask_bcrypt import Bcrypt
+from sqlalchemy import exc
 
 from models import db, User, Message, Follows, connect_db
 
@@ -18,7 +19,7 @@ bcrypt = Bcrypt()
 # before we import our app, since that will have already
 # connected to the database
 
-os.environ['DATABASE_URL'] = "postgresql:///warbler_test"
+# os.environ['DATABASE_URL'] = "postgresql:///warbler_test"
 
 # Now we can import app
 
@@ -107,20 +108,42 @@ class UserModelTestCase(TestCase):
     def test_user_failed_signup(self):
         """Test the validation on the user sign up form"""
 
-        #Setup for test email validation
+        # # Setup for test email validation
         test_user = User.signup("test_1", "u1_bad_email", "password", None)
         resp = User.query.get(test_user.id)
 
-        #Test that user email validation will fail with incorrect format
+        # #Test that user email validation will fail with incorrect format
         self.assertFalse(resp)
 
+        with self.assertRaises(exc.IntegrityError):
+            test_username = User.signup("u1", "u1@email2.com", "password", None)
+            User.query.get(test_username.id)
 
-        #Setup for test username
-        test_username = User.signup("u1", "u1@email2.com", "password", None)
-        resp = User.query.get(test_username.id)
+        # with self.assertRaises(exc.IntegrityError):
+        #     test_username = User.signup(None, "u1@email3.com", "password", None)
+        #     User.query.get(test_username.id)
 
-        print('test_username ---------------------------->', test_username)
 
-        #Test that user name validation will fail if username is not unique
-        self.assertFalse(resp)
+    def test_user_authentication(self):
+        """Test the authentication of user"""
 
+        u1 = User.query.get(self.u1_id)
+        print(u1, "u1---------------------------------------------------")
+
+        a = User.authenticate("u1", "password")
+        print(a, "a---------------------------------------------------")
+
+        # Test that authentication works with valid username/password
+        self.assertEqual(u1, a)
+
+        b = User.authenticate("bad_username", "password")
+        print(b, "b---------------------------------------------------")
+
+        # Test that authentication fails with invalid username
+        self.assertFalse(b)
+
+        c = User.authenticate("u1", "bad_password")
+        print(c, "c---------------------------------------------------")
+
+        # Test that authentication fails with invalid password
+        self.assertFalse(c)
