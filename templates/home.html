@@ -54,11 +54,7 @@
                   <form action="/messages/{{ msg.id }}/like" method="POST" class="pt-4 ps-2">
                     {{ form.hidden_tag() }}
                     <button type="submit" class="btn btn-outline-secondary btn-sm" aria-pressed="false">
-                      {% if msg in g.user.liked_messages %}
-                      <i class="bi bi-star-fill text-warning"></i>
-                      {% else %}
-                      <i class="bi bi-star"></i>
-                      {% endif %}
+                      <i class="bi bi-star{% if msg in g.user.liked_messages %}-fill text-warning{% endif %}"></i>
                     </button>
                   </form>
                 </a>
