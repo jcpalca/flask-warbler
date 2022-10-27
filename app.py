@@ -328,10 +328,9 @@ def show_message(message_id):
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    user = g.user
     msg = Message.query.get_or_404(message_id)
 
-    return render_template('messages/show.html', message=msg, user=user)
+    return render_template('messages/show.html', message=msg)
 
 
 @app.post('/messages/<int:message_id>/delete')
@@ -353,7 +352,47 @@ def delete_message(message_id):
     return redirect(f"/users/{g.user.id}")
 
 @app.post('/messages/<int:message_id>/like')
+def toggle_like(message_id):
+    """Toggle like on a message. Redirect to homepage on success."""
 
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    form = g.csrf_form
+    user = g.user
+    liked_msg = Message.query.get_or_404(message_id)
+
+    if liked_msg.user_id == g.user.id:
+        flash("You cannot like your own Warble!", "danger")
+        return redirect("/")
+
+    if form.validate_on_submit():
+        if liked_msg not in user.liked_messages:
+            user.liked_messages.append(liked_msg)
+        else:
+            user.liked_messages.remove(liked_msg)
+    else:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    db.session.commit()
+
+    return redirect("/")
+
+
+@app.get('/users/<int:user_id>/likes')
+def show_user_likes(user_id):
+    """Display liked messages from user"""
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    form = g.csrf_form
+    user = User.query.get_or_404(user_id)
+
+    return render_template("users/likes.html", user=user, form=form)
 
 ##############################################################################
 # Homepage and error pages
@@ -367,6 +406,8 @@ def homepage():
     - logged in: 100 most recent messages of followed_users
     """
 
+    form = g.csrf_form
+
     if g.user:
         following_ids = [f.id for f in g.user.following] + [g.user.id]
 
@@ -378,21 +419,11 @@ def homepage():
             .limit(100)
             .all())
 
-        return render_template('home.html', messages=messages)
+        return render_template('home.html', messages=messages, form=form)
 
     else:
         return render_template('home-anon.html')
 
-    # user = g.user
-
-    # for msg in messages:
-    # msg = Message.query.get_or_404(message)
-
-    # if form.validate_on_submit():
-    #     user.liked_messages.append(msg)
-    #     db.session.commit()
-
-    #     return redirect('/')
 
 ##############################################################################
 # Turn off all caching in Flask
