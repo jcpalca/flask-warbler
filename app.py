@@ -425,3 +425,12 @@ def add_header(response):
     # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
     response.cache_control.no_store = True
     return response
+
+
+@app.post("/api/messages/<int:message_id>/like")
+def api_toggle_like(message_id):
+    """
+    Toggle like on a message.
+    Return JSON like:
+        {message: }
+    """
