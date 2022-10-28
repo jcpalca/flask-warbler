@@ -1,20 +1,28 @@
 "use strict";
 
 const BASE_URL = "http://localhost:5001/api";
-const $likeForm = $(".like-form");
-const $favoritedButton = $(".favorite")
+const $favButton = $(".fav-button");
+const $favIcon = $(".fav-icon");
 
 
 async function toggleLike(evt) {
+  evt.preventDefault();
+  console.log("This was toggled");
+  const messageId = $(evt.target).closest(".like-form").data("message-id");
+  const csrf_token = $favButton.data("csrf");
+  console.log("This is the csrf:", csrf_token);
+  console.log("This is messageId", messageId);
 
-  const messageId = $(evt.target).closest(".like-form").data("message-id")
+  axios.defaults.headers.common["X-CSRFToken"] = csrf_token;
+  const resp = await axios.post(`${BASE_URL}/messages/${messageId}/like`);
 
-  // First, send message id in request
-
-  // get response (read if true or false)
-  //toggle icon with updated class "bi-star-fill"
-
+  if(resp.data.favorited == true) {
+    $favIcon.removeClass("bi-star").addClass("bi-star-fill text-warning");
+  }
+  else {
+    $favIcon.removeClass("bi-star-fill text-warning").addClass("bi-star");
+  }
 
 }
 
-//TODO - Put event listener on button - with toggleLike() function
+$favButton.on("click", toggleLike);
