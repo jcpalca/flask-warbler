@@ -1,7 +1,8 @@
 import os
 from dotenv import load_dotenv
 
-from flask import Flask, render_template, request, flash, redirect, session, g
+from flask import Flask, render_template, request, flash, redirect, session, g, jsonify
+from flask_wtf import CSRFProtect
 from flask_debugtoolbar import DebugToolbarExtension
 from werkzeug.exceptions import Unauthorized
 from sqlalchemy.exc import IntegrityError
@@ -18,6 +19,7 @@ load_dotenv()
 
 CURR_USER_KEY = "curr_user"
 
+csrf = CSRFProtect()
 app = Flask(__name__)
 
 # Get DB_URI from environ variable (useful for production/testing) or,
@@ -29,6 +31,8 @@ app.config['SQLALCHEMY_ECHO'] = False
 app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 toolbar = DebugToolbarExtension(app)
+
+csrf.init_app(app)
 
 connect_db(app)
 
@@ -340,32 +344,32 @@ def delete_message(message_id):
 
     return redirect(f"/users/{g.user.id}")
 
-@app.post('/messages/<int:message_id>/like')
-def toggle_like(message_id):
-    """Toggle like on a message. Redirect to homepage on success."""
+# @app.post('/messages/<int:message_id>/like')
+# def toggle_like(message_id):
+#     """Toggle like on a message. Redirect to homepage on success."""
 
-    if not g.user:
-        raise Unauthorized()
+#     if not g.user:
+#         raise Unauthorized()
 
-    form = g.csrf_form
-    user = g.user
-    liked_msg = Message.query.get_or_404(message_id)
+#     form = g.csrf_form
+#     user = g.user
+#     liked_msg = Message.query.get_or_404(message_id)
 
-    if liked_msg.user_id == g.user.id:
-        flash("You cannot like your own Warble!", "danger")
-        return redirect("/")
+#     if liked_msg.user_id == g.user.id:
+#         flash("You cannot like your own Warble!", "danger")
+#         return redirect("/")
 
-    if form.validate_on_submit():
-        if liked_msg not in user.liked_messages:
-            user.liked_messages.append(liked_msg)
-        else:
-            user.liked_messages.remove(liked_msg)
-    else:
-        raise Unauthorized()
+#     if form.validate_on_submit():
+#         if liked_msg not in user.liked_messages:
+#             user.liked_messages.append(liked_msg)
+#         else:
+#             user.liked_messages.remove(liked_msg)
+#     else:
+#         raise Unauthorized()
 
-    db.session.commit()
+#     db.session.commit()
 
-    return redirect("/")
+#     return redirect("/")
 
 
 @app.get('/users/<int:user_id>/likes')
@@ -432,8 +436,20 @@ def api_toggle_like(message_id):
     """
     Toggle like on a message.
     Return JSON like:
-        {favorited: true or false }
+        {favorited: True or False }
     """
+
+    user = g.user
+    liked_msg = Message.query.get_or_404(message_id)
+
+    if liked_msg not in user.liked_messages:
+        user.liked_messages.append(liked_msg)
+        db.session.commit()
+        return jsonify(favorited=True) # {favorited: True}
+    else:
+        user.liked_messages.remove(liked_msg)
+        db.session.commit()
+        return jsonify(favorited=False)
 
 
     ## Get request, convert JSON boolean to python object
