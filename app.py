@@ -432,5 +432,14 @@ def api_toggle_like(message_id):
     """
     Toggle like on a message.
     Return JSON like:
-        {message: }
+        {favorited: true or false }
     """
+
+
+    ## Get request, convert JSON boolean to python object
+    ## read boolean value
+    ## process boolean value through if statement -->
+    ## update data in database --> create or remove "favorited" relationship
+    ## send back confirmation (boolean object converted JSON) in response
+
+    ## if true: return jsonify( {favorited: true} )
