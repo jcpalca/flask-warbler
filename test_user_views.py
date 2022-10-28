@@ -6,9 +6,7 @@
 
 
 import os
-from re import S
 from unittest import TestCase
-from app import CURR_USER_KEY
 
 from models import db, Message, User, connect_db
 
@@ -17,7 +15,7 @@ from models import db, Message, User, connect_db
 # before we import our app, since that will have already
 # connected to the database
 
-# os.environ['DATABASE_URL'] = "postgresql:///warbler_test"
+os.environ['DATABASE_URL'] = "postgresql:///warbler_test"
 
 # Now we can import app
 
