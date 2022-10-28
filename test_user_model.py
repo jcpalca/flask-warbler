@@ -102,45 +102,33 @@ class UserModelTestCase(TestCase):
         self.assertEqual(u1.image_url, test_user['image_url'])
 
 
-    def test_user_failed_signup(self):
-        """Test the validation on the user sign up form"""
-
-        # # Setup for test email validation
-        test_user = User.signup("test_1", "u1_bad_email", "password", None)
-        resp = User.query.get(test_user.id)
-
-        # #Test that user email validation will fail with incorrect format
-        self.assertFalse(resp)
+    def test_user_failed_signup_not_unique(self):
+        """Test the validation on the user sign up form when input is not unique"""
 
         with self.assertRaises(exc.IntegrityError):
-            test_username = User.signup("u1", "u1@email2.com", "password", None)
-            User.query.get(test_username.id)
+            User.signup("u1", "u1@email2.com", "password", None)
+            db.session.flush()
 
-        # with self.assertRaises(exc.IntegrityError):
-        #     test_username = User.signup(None, "u1@email3.com", "password", None)
-        #     User.query.get(test_username.id)
 
+    def test_user_failed_signup_null(self):
+        """Test the validation on the user sign up form when no input is found"""
+
+        with self.assertRaises(exc.IntegrityError):
+            User.signup("u3", None, "password", None)
+            db.session.flush()
 
     def test_user_authentication(self):
         """Test the authentication of user"""
 
         u1 = User.query.get(self.u1_id)
-        print(u1, "u1---------------------------------------------------")
 
-        a = User.authenticate("u1", "password")
-        print(a, "a---------------------------------------------------")
+        user = User.authenticate("u1", "password")
 
         # Test that authentication works with valid username/password
-        self.assertEqual(u1, a)
-
-        b = User.authenticate("bad_username", "password")
-        print(b, "b---------------------------------------------------")
+        self.assertEqual(u1, user)
 
         # Test that authentication fails with invalid username
-        self.assertFalse(b)
-
-        c = User.authenticate("u1", "bad_password")
-        print(c, "c---------------------------------------------------")
+        self.assertFalse(User.authenticate("bad_username", "password"))
 
         # Test that authentication fails with invalid password
-        self.assertFalse(c)
+        self.assertFalse(User.authenticate("u1", "bad_password"))
