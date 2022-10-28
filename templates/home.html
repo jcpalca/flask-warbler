@@ -51,7 +51,7 @@
                 <a href="/messages/{{ msg.id }}" class="message-link">
                 <a href="/users/{{ msg.user.id }}">
                   <img src="{{ msg.user.image_url }}" alt="" class="timeline-image">
-                  <form action="/messages/{{ msg.id }}/like" method="POST" class="pt-4 ps-2">
+                  <form action="/messages/{{ msg.id }}/like" method="POST" class="pt-4 ps-2 like-form">
                     {{ form.hidden_tag() }}
                     <button type="submit" class="btn btn-outline-secondary btn-sm" aria-pressed="false">
                       <i class="bi bi-star{% if msg in g.user.liked_messages %}-fill text-warning{% endif %}"></i>
