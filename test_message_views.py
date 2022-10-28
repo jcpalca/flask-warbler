@@ -15,7 +15,7 @@ from models import db, Message, User, connect_db
 # before we import our app, since that will have already
 # connected to the database
 
-os.environ['DATABASE_URL'] = "postgresql:///warbler_test"
+# os.environ['DATABASE_URL'] = "postgresql:///warbler_test"
 
 # Now we can import app
 
@@ -71,11 +71,12 @@ class MessageAddViewTestCase(MessageBaseViewTestCase):
 
             # Now, that session setting is saved, so we can have
             # the rest of ours test
-            resp = c.post("/messages/new", data={"text": "Hello"})
+            resp = c.post("/messages/new", data={"text": "Hello"}, follow_redirects=True)
 
-            self.assertEqual(resp.status_code, 302)
+            html = resp.get_data(as_text=True)
 
-            Message.query.filter_by(text="Hello").one()
+            self.assertIn("Hello", html)
+            self.assertEqual(resp.status_code, 200)
 
 
     def test_add_message_logged_out(self):
@@ -85,10 +86,7 @@ class MessageAddViewTestCase(MessageBaseViewTestCase):
 
             resp = c.post("/messages/new", data={"text": "Hello"}, follow_redirects=True)
 
-            html = resp.get_data(as_text=True)
-
-            self.assertEqual(resp.status_code, 200)
-            self.assertIn("Access unauthorized", html)
+            self.assertEqual(resp.status_code, 401)
 
 
     def test_delete_message_logged_in(self):
@@ -98,19 +96,21 @@ class MessageAddViewTestCase(MessageBaseViewTestCase):
             with c.session_transaction() as sess:
                 sess[CURR_USER_KEY] = self.u1_id
 
-            messages = Message.query.all()
+            get_msg_page_before = c.get(f"/messages/{self.m1_id}")
 
-            ## Verify that there is one message in the messages table
-            self.assertEqual(len(messages), 1)
+            html = get_msg_page_before.get_data(as_text=True)
 
-            resp = c.post(f"/messages/{self.m1_id}/delete", follow_redirects=True)
+            # Test if message shows before deletion
+            self.assertIn("m1-text", html)
+            self.assertEqual(get_msg_page_before.status_code, 200)
 
-            self.assertEqual(resp.status_code, 200)
+            c.post(f"/messages/{self.m1_id}/delete")
+            get_msg_page_after = c.get(f"/messages/{self.m1_id}")
 
-            messages_after = Message.query.all()
+            html = get_msg_page_after.get_data(as_text=True)
 
-            ## Verify after delete that the messages table is empty
-            self.assertEqual(len(messages_after), 0)
+            self.assertNotIn("m1-text", html)
+            self.assertEqual(get_msg_page_after.status_code, 404)
 
 
     def test_delete_message_logged_out(self):
@@ -120,10 +120,7 @@ class MessageAddViewTestCase(MessageBaseViewTestCase):
 
             resp = c.post(f"/messages/{self.m1_id}/delete", follow_redirects=True)
 
-            html = resp.get_data(as_text=True)
-
-            self.assertEqual(resp.status_code, 200)
-            self.assertIn("Access unauthorized", html)
+            self.assertEqual(resp.status_code, 401)
 
 
     def test_delete_other_user_message_logged_in(self):
@@ -138,5 +135,4 @@ class MessageAddViewTestCase(MessageBaseViewTestCase):
 
             html = resp.get_data(as_text=True)
 
-            self.assertNotIn("Delete</button>", html)
-
+            self.assertNotIn("DELETE BUTTON FOR TESTING PURPOSES", html)
