@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 
 from flask import Flask, render_template, request, flash, redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
+from werkzeug.exceptions import Unauthorized
 from sqlalchemy.exc import IntegrityError
 
 from forms import (
@@ -135,8 +136,7 @@ def logout():
         flash('You have successfully logged out.')
         return redirect("/login")
     else:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
+        raise Unauthorized()
 
 
 ##############################################################################
@@ -150,8 +150,7 @@ def list_users():
     """
 
     if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
+        raise Unauthorized()
 
     search = request.args.get('q')
 
@@ -168,8 +167,7 @@ def show_user(user_id):
     """Show user profile."""
 
     if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
+        raise Unauthorized()
 
     user = User.query.get_or_404(user_id)
 
@@ -181,8 +179,7 @@ def show_following(user_id):
     """Show list of people this user is following."""
 
     if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
+        raise Unauthorized()
 
     user = User.query.get_or_404(user_id)
     return render_template('users/following.html', user=user)
@@ -193,8 +190,7 @@ def show_followers(user_id):
     """Show list of followers of this user."""
 
     if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
+        raise Unauthorized()
 
     user = User.query.get_or_404(user_id)
     return render_template('users/followers.html', user=user)
@@ -208,8 +204,7 @@ def start_following(follow_id):
     """
 
     if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
+        raise Unauthorized()
 
     followed_user = User.query.get_or_404(follow_id)
     g.user.following.append(followed_user)
@@ -226,8 +221,7 @@ def stop_following(follow_id):
     """
 
     if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
+        raise Unauthorized()
 
     followed_user = User.query.get(follow_id)
     g.user.following.remove(followed_user)
@@ -244,8 +238,7 @@ def profile():
         For non-validation: re-renders the form with error message"""
 
     if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
+        raise Unauthorized()
 
     user = g.user
     form = UserEditForm(obj=user)
@@ -283,8 +276,7 @@ def delete_user():
     """
 
     if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
+        raise Unauthorized()
 
     do_logout()
 
@@ -305,8 +297,7 @@ def add_message():
     """
 
     if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
+        raise Unauthorized()
 
     form = MessageForm()
 
@@ -325,8 +316,7 @@ def show_message(message_id):
     """Show a message detail."""
 
     if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
+        raise Unauthorized()
 
     msg = Message.query.get_or_404(message_id)
 
@@ -342,8 +332,7 @@ def delete_message(message_id):
     """
 
     if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
+        raise Unauthorized()
 
     msg = Message.query.get_or_404(message_id)
     db.session.delete(msg)
@@ -356,8 +345,7 @@ def toggle_like(message_id):
     """Toggle like on a message. Redirect to homepage on success."""
 
     if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
+        raise Unauthorized()
 
     form = g.csrf_form
     user = g.user
@@ -373,8 +361,7 @@ def toggle_like(message_id):
         else:
             user.liked_messages.remove(liked_msg)
     else:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
+        raise Unauthorized()
 
     db.session.commit()
 
@@ -386,8 +373,7 @@ def show_user_likes(user_id):
     """Display liked messages from user"""
 
     if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
+        raise Unauthorized()
 
     form = g.csrf_form
     user = User.query.get_or_404(user_id)
