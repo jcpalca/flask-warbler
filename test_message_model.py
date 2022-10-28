@@ -45,11 +45,11 @@ class MessageModelTestCase(TestCase):
     def tearDown(self):
         db.session.rollback()
 
+
     def test_message_model(self):
+        """Test if a user owns a message 'text'"""
         u1 = User.query.get(self.u1_id)
         m1 = Message.query.get(self.m1_id)
-        print(m1.user_id, "m1--------------------------------------------------")
-        print(u1.id, "u1---------------------------------------------")
 
         # User should have one message, "text"
         self.assertEqual(len(u1.messages), 1)
@@ -57,7 +57,8 @@ class MessageModelTestCase(TestCase):
         self.assertEqual(u1.messages[0].text, "text")
 
 
-    def test_message_likes(self):
+    def test_message_add_and_remove_likes(self):
+        """Test if a user can have liked messages and remove them"""
         u2 = User.query.get(self.u2_id)
         m1 = Message.query.get(self.m1_id)
 
@@ -66,3 +67,9 @@ class MessageModelTestCase(TestCase):
 
         self.assertEqual(len(u2.liked_messages), 1)
         self.assertEqual(len(m1.liked_by_users), 1)
+
+        u2.liked_messages.remove(m1)
+        db.session.commit()
+
+        self.assertEqual(len(u2.liked_messages), 0)
+        self.assertEqual(len(m1.liked_by_users), 0)
