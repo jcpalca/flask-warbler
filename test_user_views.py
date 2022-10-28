@@ -15,7 +15,7 @@ from models import db, Message, User, connect_db
 # before we import our app, since that will have already
 # connected to the database
 
-os.environ['DATABASE_URL'] = "postgresql:///warbler_test"
+# os.environ['DATABASE_URL'] = "postgresql:///warbler_test"
 
 # Now we can import app
 
@@ -96,7 +96,9 @@ class UserAddViewTestCase(UserBaseViewTestCase):
 
             html = resp.get_data(as_text=True)
 
-            self.assertIn("Invalid", html)
+            self.assertIn("Invalid email", html)
+            # Won't reach the home page where username is displayed with an @
+            self.assertNotIn("@baduser", html)
 
             #Verify that the proper response code is received after user registration
             self.assertEqual(resp.status_code, 200)
@@ -161,6 +163,7 @@ class UserAddViewTestCase(UserBaseViewTestCase):
             self.assertIn("Messages", html)
             self.assertIn("Following", html)
             self.assertIn("Followers", html)
+            self.assertEqual(resp.status_code, 200)
 
 
     def test_view_profile_logged_out(self):
@@ -171,9 +174,7 @@ class UserAddViewTestCase(UserBaseViewTestCase):
             url = f"/users/{self.u1_id}"
             resp = client.get(url, follow_redirects=True)
 
-            html = resp.get_data(as_text=True)
-
-            self.assertIn("Access unauthorized", html)
+            self.assertEqual(resp.status_code, 401)
 
 
     def test_view_followers_logged_in(self):
@@ -190,6 +191,7 @@ class UserAddViewTestCase(UserBaseViewTestCase):
             html = resp.get_data(as_text=True)
 
             self.assertIn("@u3", html)
+            self.assertEqual(resp.status_code, 200)
 
 
     def test_view_followers_logged_out(self):
@@ -200,9 +202,7 @@ class UserAddViewTestCase(UserBaseViewTestCase):
             url = f"/users/{self.u1_id}/followers"
             resp = client.get(url, follow_redirects=True)
 
-            html = resp.get_data(as_text=True)
-
-            self.assertIn("Access unauthorized", html)
+            self.assertEqual(resp.status_code, 401)
 
 
     def test_view_following_logged_in(self):
@@ -219,6 +219,7 @@ class UserAddViewTestCase(UserBaseViewTestCase):
             html = resp.get_data(as_text=True)
 
             self.assertIn("@u2", html)
+            self.assertEqual(resp.status_code, 200)
 
 
     def test_view_following_logged_out(self):
@@ -229,6 +230,4 @@ class UserAddViewTestCase(UserBaseViewTestCase):
             url = f"/users/{self.u1_id}/following"
             resp = client.get(url, follow_redirects=True)
 
-            html = resp.get_data(as_text=True)
-
-            self.assertIn("Access unauthorized", html)
+            self.assertEqual(resp.status_code, 401)
