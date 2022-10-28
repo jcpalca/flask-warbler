@@ -46,12 +46,18 @@ class UserBaseViewTestCase(TestCase):
 
         u1 = User.signup("u1", "u1@email.com", "password", None)
         u2 = User.signup("u2", "u2@email.com", "password", None)
+        u3 = User.signup("u3", "u3@email.com", "password", None)
+        u1.following.append(u2)
+        u2.following.append(u3)
+        u3.following.append(u1)
         db.session.flush()
 
         db.session.add(u1, u2)
         db.session.commit()
 
         self.u1_id = u1.id
+        self.u2_id = u2.id
+        self.u3_id = u3.id
 
         self.client = app.test_client()
 
@@ -165,6 +171,64 @@ class UserAddViewTestCase(UserBaseViewTestCase):
         with app.test_client() as client:
 
             url = f"/users/{self.u1_id}"
+            resp = client.get(url, follow_redirects=True)
+
+            html = resp.get_data(as_text=True)
+
+            self.assertIn("Access unauthorized", html)
+
+
+    def test_view_followers_logged_in(self):
+        """Test if followers can be viewed if logged in"""
+
+        with app.test_client() as client:
+
+            with client.session_transaction() as session:
+                session[CURR_USER_KEY] = self.u1_id
+
+            url = f"/users/{self.u1_id}/followers"
+            resp = client.get(url, follow_redirects=True)
+
+            html = resp.get_data(as_text=True)
+
+            self.assertIn("@u3", html)
+
+
+    def test_view_followers_logged_out(self):
+        """Test if followers can be viewed if logged out"""
+
+        with app.test_client() as client:
+
+            url = f"/users/{self.u1_id}/followers"
+            resp = client.get(url, follow_redirects=True)
+
+            html = resp.get_data(as_text=True)
+
+            self.assertIn("Access unauthorized", html)
+
+
+    def test_view_following_logged_in(self):
+        """Test if following can be viewed if logged in"""
+
+        with app.test_client() as client:
+
+            with client.session_transaction() as session:
+                session[CURR_USER_KEY] = self.u1_id
+
+            url = f"/users/{self.u1_id}/following"
+            resp = client.get(url, follow_redirects=True)
+
+            html = resp.get_data(as_text=True)
+
+            self.assertIn("@u2", html)
+
+
+    def test_view_following_logged_out(self):
+        """Test if following can be viewed if logged out"""
+
+        with app.test_client() as client:
+
+            url = f"/users/{self.u1_id}/following"
             resp = client.get(url, follow_redirects=True)
 
             html = resp.get_data(as_text=True)
