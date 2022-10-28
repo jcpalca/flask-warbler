@@ -22,6 +22,7 @@
 
             {% if g.user %}
             {% if g.user.id == message.user.id %}
+            <!-- DELETE BUTTON FOR TESTING PURPOSES -->
             <form method="POST"
                   action="/messages/{{ message.id }}/delete">
               <button class="btn btn-outline-danger">Delete</button>
