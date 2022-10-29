@@ -1,0 +1,6 @@
+<form action="/messages/{{ msg.id }}/like"  method="POST" class="pt-4 ps-2 like-form" data-message-id="{{ msg.id }}">
+  {{ form.hidden_tag() }}
+  <button type="submit" class="btn btn-outline-secondary btn-sm fav-button" aria-pressed="false" data-csrf="{{ csrf_token() }}">
+    <i class="fav-icon bi bi-star{% if msg in g.user.liked_messages %}-fill text-warning{% endif %}"></i>
+  </button>
+</form>
