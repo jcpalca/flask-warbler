@@ -4,26 +4,27 @@
   <div class="row">
     <ul class="list-group no-hover" id="messages">
 
-    {% for message in user.liked_messages %}
+    {% for msg in user.liked_messages %}
 
       <li class="list-group-item">
 
-        <a href="{{ url_for('show_user', user_id=message.user.id) }}">
-          <img src="{{ message.user.image_url }}"
+        <a href="{{ url_for('show_user', user_id=msg.user.id) }}">
+          <img src="{{ msg.user.image_url }}"
               alt=""
               class="timeline-image">
         </a>
 
         <div class="message-area">
           <div class="message-heading">
-            <a href="/users/{{ message.user.id }}">
-              @{{ message.user.username }}
+            <a href="/users/{{ msg.user.id }}">
+              @{{ msg.user.username }}
             </a>
           </div>
-          <p class="single-message">{{ message.text }}</p>
+          <p class="single-message">{{ msg.text }}</p>
           <span class="text-muted">
-              {{ message.timestamp.strftime('%d %B %Y') }}
-            </span>
+              {{ msg.timestamp.strftime('%d %B %Y') }}
+          </span>
+          {% include "like-form.html" %}
         </div>
       </li>
 

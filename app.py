@@ -173,9 +173,10 @@ def show_user(user_id):
     if not g.user:
         raise Unauthorized()
 
+    form = g.csrf_form
     user = User.query.get_or_404(user_id)
 
-    return render_template('users/show.html', user=user)
+    return render_template('users/show.html', user=user, form=form)
 
 
 @app.get('/users/<int:user_id>/following')
@@ -322,9 +323,10 @@ def show_message(message_id):
     if not g.user:
         raise Unauthorized()
 
+    form = g.csrf_form
     msg = Message.query.get_or_404(message_id)
 
-    return render_template('messages/show.html', message=msg)
+    return render_template('messages/show.html', msg=msg, form=form)
 
 
 @app.post('/messages/<int:message_id>/delete')
